@@ -1,4 +1,4 @@
-(defproject org.clojars.fourteatoo/clj-blink "0.1.0-SNAPSHOT"
+(defproject io.github.fourteatoo/clj-blink "0.1.0-SNAPSHOT"
   :description "A simple and unofficial Blink Cameras API
   See https://github.com/MattTW/BlinkMonitorProtocol for protocol
   information."
