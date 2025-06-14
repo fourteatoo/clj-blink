@@ -1,5 +1,7 @@
 # clj-blink
 
+[![Clojars Project](https://img.shields.io/clojars/v/io.github.fourteatoo/clj-blink.svg?include_prereleases)](https://clojars.org/io.github.fourteatoo/clj-blink)
+
 A Clojure library to use the Blink Camera REST API.  The protocol is
 not officially disclosed but has been reverse engineered by Matt
 Weinecke.  See https://github.com/MattTW/BlinkMonitorProtocol
