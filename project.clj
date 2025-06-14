@@ -11,4 +11,4 @@
                  [cheshire "6.0.0"]
                  [camel-snake-kebab "0.4.3"]]
   :profiles {:dev {:plugins [[lein-codox "0.10.8"]]}}
-  :repl-options {:init-ns clj-blink.api})
+  :repl-options {:init-ns fourteatoo.clj-blink.api})
