@@ -19,12 +19,22 @@ and obtain an access token
 (def client (blink/register-client "username" "password"))
 ```
 
-This will trigger whatever you have configured for 2FA; a PIN will be
-sent to you by Blink to your designated authentication means: an
-email, a SMS, whatever.
+This will trigger whatever you have configured for 2FA.  A PIN will be
+sent by Blink to your designated authentication means: an email, an
+SMS, whatever.  Type it in.
 
-Save the returned client map for later use.  The client map
-contains sensitive info, so don't disclose it.
+Any subsequent authentications should instead do:
+
+```clojure
+(def client (blink/authenticate-client "username" "password" "unique-id"))
+```
+
+The `username` and `password` are the same as those used for the
+`register-client`.  The `unique-id` is the same one returned (and
+displayed) by `register-client`.
+
+The authentication is valid for 24 hours but its automatically renewed
+by the libary.
 
 You can use your client parameters like this:
 
@@ -47,15 +57,15 @@ Have a look at https://github.com/MattTW/BlinkMonitorProtocol and the
 source code.
 
 
-## Reference
+## Documentation
 
-An API documentation can be generated with
+An API reference documentation can be generated with
 
 ```shell
 $ lein codox
 ```
 
-the you can read it with your favorite browser
+then you can read it with your favorite browser
 
 ```shell
 $ firefox target/doc/index.html
