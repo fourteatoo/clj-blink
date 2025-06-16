@@ -64,13 +64,17 @@ source code.
 
 ## Documentation
 
-An API reference documentation can be generated with
+You can have a look at cljdoc:
+
+[![cljdoc badge](https://cljdoc.org/badge/io.github.fourteatoo/clj-blink)](https://cljdoc.org/d/io.github.fourteatoo/clj-blink)
+
+or you can create your own documentation with:
 
 ```shell
 $ lein codox
 ```
 
-then you can read it with your favorite browser
+and then you can read it with your favorite browser
 
 ```shell
 $ firefox target/doc/index.html
