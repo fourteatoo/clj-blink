@@ -113,17 +113,15 @@ or disarm them, substituting `system-arm` for `system-disarm`.
 
 ## Documentation
 
-You can have a look at cljdoc:
+You can have a look at [![cljdoc](https://cljdoc.org/badge/io.github.fourteatoo/clj-blink)](https://cljdoc.org/d/io.github.fourteatoo/clj-blink)
 
-[![cljdoc badge](https://cljdoc.org/badge/io.github.fourteatoo/clj-blink)](https://cljdoc.org/d/io.github.fourteatoo/clj-blink)
-
-or you can create your own documentation with:
+or you can create your own local documentation with:
 
 ```shell
 $ lein codox
 ```
 
-and then you can read it with your favorite browser
+and then read it with your favorite browser
 
 ```shell
 $ firefox target/doc/index.html
