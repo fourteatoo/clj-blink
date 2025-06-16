@@ -10,5 +10,7 @@
                  [clj-http "3.13.0"]
                  [cheshire "6.0.0"]
                  [camel-snake-kebab "0.4.3"]]
-  :profiles {:dev {:plugins [[lein-codox "0.10.8"]]}}
+  :profiles {:dev {:plugins [[lein-codox "0.10.8"]]
+                   :dependencies [[org.clojure/tools.trace "0.8.0"]]}
+             :test {:dependencies [[org.clojure/tools.trace "0.8.0"]]}}
   :repl-options {:init-ns fourteatoo.clj-blink.api})
