@@ -33,12 +33,17 @@
 (defn- stringify-body [opts]
   (update opts :body ->json-string))
 
+(defn- kebab-keys [thing]
+  (if (string? thing)
+    (csk/->kebab-case-keyword thing)
+    thing))
+
 (defn- decode-json-reply [response]
   (if (json-content? response)
     (assoc response :json
            (-> response
                :body
-               (json/parse-string csk/->kebab-case-keyword)))
+               (json/parse-string kebab-keys)))
     response))
 
 (defn- restify [action]
