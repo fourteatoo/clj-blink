@@ -64,7 +64,7 @@ You can use your client parameters like this:
 which will return something like:
 
 ```clojure
-{:summary {:12345 {:name "Home", :onboarded true}},
+{:summary {12345 {:name "Home", :onboarded true}},
  :networks
  [{:description "",
    :updated-at "2025-06-02T15:47:52+00:00",
