@@ -21,7 +21,7 @@
    :client-name *device-id*})
 
 (defrecord BlinkClient [email password unique-id
-                   account-id client-id auth-token tier])
+                        account-id client-id auth-token tier])
 
 (defn- make-headers [client]
   (cond-> {:content-type "application/json"
