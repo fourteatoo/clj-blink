@@ -6,10 +6,10 @@
    [fourteatoo.clj-blink.http :as http]
    [java-time :as jt]))
 
-(def ^:private blink-domain "immedia-semi.com")
+(def ^:private api-domain "immedia-semi.com")
 
 (defn- blink-url [& [tier]]
-  (str "https://rest-" (or tier "prod") "." blink-domain))
+  (str "https://rest-" (or tier "prod") "." api-domain))
 
 (defn- make-uuid []
   (java.util.UUID/randomUUID))
