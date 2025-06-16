@@ -18,7 +18,8 @@ Require the library in your source code
 ```
 
 The first time you use the library you need to register your client
-and obtain an access token
+and obtain a unique id (returned in the resulting `BlinkClient`
+object).
 
 ```clojure
 (def client (blink/register-client "your@mail.address" "yourpassword"))
@@ -52,8 +53,8 @@ The `username` and `password` are the same as those used for the
 displayed) by `register-client`
 ("some-pseudo-random-hexadecimal-string" in the example above).
 
-The authentication is valid for 24 hours and it's automatically
-renewed by this libary.
+The authentication (the `auth-token`) is valid for 24 hours and is
+automatically renewed by this libary.
 
 You can use your client parameters like this:
 
