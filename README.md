@@ -40,7 +40,8 @@ SMS, whatever.  Type it in.
  :tier "yourregion"}
 ```
 
-Any subsequent authentications should instead do:
+Any subsequent authentications (next time your app restarts) should
+instead do:
 
 ```clojure
 (def client (blink/authenticate-client "your@mail.address" "yourpassword" "unique-id"))
@@ -51,8 +52,8 @@ The `username` and `password` are the same as those used for the
 displayed) by `register-client`
 ("some-pseudo-random-hexadecimal-string" in the example above).
 
-The authentication is valid for 24 hours but it's automatically
-renewed by the libary.
+The authentication is valid for 24 hours and it's automatically
+renewed by this libary.
 
 You can use your client parameters like this:
 
