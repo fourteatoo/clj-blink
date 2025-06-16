@@ -43,7 +43,6 @@
 
 (defn- restify [action]
   (fn [url & [opts]]
-    (prn 'action action 'url url 'opts opts) ; -wcp06/06/25
     (let [add-url #(assoc % :url url)]
       (-> (try
             (action (str url)
