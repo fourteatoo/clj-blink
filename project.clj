@@ -1,7 +1,5 @@
 (defproject io.github.fourteatoo/clj-blink "0.1.0-SNAPSHOT"
-  :description "A simple and unofficial Blink Cameras API
-  See https://github.com/MattTW/BlinkMonitorProtocol for protocol
-  information."
+  :description "A simple and unofficial Blink Camera API."
   :url "http://github.com/fourteatoo/clj-blink"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
