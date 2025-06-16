@@ -1,5 +1,6 @@
 (ns fourteatoo.clj-blink.http
   "Various fairly low level HTTP primitives and wrappers of `clj-http`."
+  {:no-doc true}
   (:require [clojure.string :as s]
             [clj-http.client :as http]
             clj-http.cookies
