@@ -160,13 +160,24 @@
 (defn- network-endpoint [client]
   (str (blink-url (:tier client)) "/networks"))
 
+(defn- correct-numeric-keys [m]
+  (reduce-kv (fn [m k v]
+               (assoc m (parse-long (name k)) v))
+             {} m))
+
 (defn get-networks
   "Get all the configured networks.  Network being a collection of
   cameras hooked to the same Blink hub (aka sync module).  Pass a
   `client` map as returned by `authenticate-client` or
   `register-client`."
   [^BlinkClient client]
-  (http-get client (network-endpoint client)))
+  (-> (http-get client (network-endpoint client))
+      ;; For some reasons, in the `:summary` map, the network ids are
+      ;; received as strings, and thus converted to keywords.  We
+      ;; convert them back to their original numeric form for
+      ;; uniformity with the ids that are found in the rest of the
+      ;; map.
+      (update :summary correct-numeric-keys)))
 
 (defn- update-network-endpoint [client network]
   (str (blink-url (:tier client)) "/network/" network "/update"))
