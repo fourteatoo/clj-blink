@@ -358,7 +358,13 @@
 (defn- media-endpoint [client path]
   (str (blink-url (:tier client)) path))
 
-(defn fetch-media [client path]
-  (-> (http-get client (media-endpoint client path))
-      :body
-      #_(.getBytes)))
+(defn fetch-media
+  "Fetch the media from the Blink server.  The `path` is found in the
+  `:thumbnail` and `:media` entries in the video maps.  See
+  `get-videos`."
+  [^BlinkClient client path & [as]]
+  {:pre [(or (nil? as)
+             (#{:stream :reader :byte-array} as))]}
+  (-> (http-get client (media-endpoint client path)
+                (if as {:as as} {}))
+      :body))
