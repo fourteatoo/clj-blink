@@ -58,19 +58,26 @@
               (exec))
             (throw e)))))))
 
+(defn- just-the-json [op]
+  (fn [client url & rest]
+    (-> (apply op client url rest)
+        :json)))
+
 (defn- with-original-http-op [op]
   (fn [client url & rest]
-    (-> (apply op url rest)
-        :json)))
+    (apply op url rest)))
 
 (defn- wrap-http-op [op & wrappers]
   ((apply comp (conj (vec wrappers) with-original-http-op))
    op))
 
+(def ^:private rest-get (wrap-http-op http/http-get just-the-json with-headers with-auto-reauth))
 (def ^:private http-get (wrap-http-op http/http-get with-headers with-auto-reauth))
-(def ^:private http-put (wrap-http-op http/http-put with-headers with-auto-reauth))
-(def ^:private http-post* (wrap-http-op http/http-post with-headers))
-(def ^:private http-post (wrap-http-op http/http-post with-headers with-auto-reauth))
+(def ^:private rest-put (wrap-http-op http/http-put just-the-json with-headers with-auto-reauth))
+(def ^:private rest-post (wrap-http-op http/http-post just-the-json with-headers with-auto-reauth))
+(def ^:private rest-post1
+  "Same as `rest-post` but do not retry on authentication errors."
+  (wrap-http-op http/http-post just-the-json with-headers))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -91,7 +98,7 @@
                      :password password
                      :unique-id unique-id
                      :reauth reauth})]
-    (http-post* nil
+    (rest-post1 nil
                 (login-endpoint)
                 {:body data})))
 
@@ -106,7 +113,7 @@
   "Send back the 2FA PIN.  This is the second phase of the registration.
   See `start-client-registration`."
   [client pin]
-  (http-post* client
+  (rest-post1 client
               (verification-endpoint client)
               {:body {:pin pin}}))
 
@@ -172,7 +179,7 @@
   `client` map as returned by `authenticate-client` or
   `register-client`."
   [^BlinkClient client]
-  (-> (http-get client (network-endpoint client))
+  (-> (rest-get client (network-endpoint client))
       ;; For some reasons, in the `:summary` map, the network ids are
       ;; received as strings, and thus converted to keywords.  We
       ;; convert them back to their original numeric form for
@@ -189,7 +196,7 @@
   a `network` id. Return a map with the network current
   configuration."
   [^BlinkClient client network]
-  (http-post client
+  (rest-post client
              (update-network-endpoint client network)))
 
 (defn- user-endpoint [client]
@@ -198,7 +205,7 @@
 (defn get-user
   "Get the user configuration.  Return a map with the user data."
   [^BlinkClient client]
-  (http-get client (user-endpoint client)))
+  (rest-get client (user-endpoint client)))
 
 (defn- network-status-endpoint [client network]
   (str (blink-url (:tier client)) "/network/" network))
@@ -207,7 +214,7 @@
   "Get the network status.  Return a map with the current configuration
   of `network`."
   [^BlinkClient client network]
-  (http-get client (network-status-endpoint client network)))
+  (rest-get client (network-status-endpoint client network)))
 
 (defn- sync-modules-endpoint [client network]
   (str (blink-url (:tier client)) "/network/" network "/syncmodules"))
@@ -216,7 +223,7 @@
   "Get the sync module of `network`. Return a map with the sync module's
   configuration."
   [^BlinkClient client network]
-  (http-get client (sync-modules-endpoint client network)))
+  (rest-get client (sync-modules-endpoint client network)))
 
 (defn- system-state-endpoint [client network action]
   (str (blink-url (:tier client)) "/api/v1/accounts/" (:account-id client) "/networks/" network
@@ -227,7 +234,7 @@
   `:disarm`.  Return a map with the actions performed on the network."
   [^BlinkClient client network action]
   {:pre [(#{:arm :disarm} action)]}
-  (http-post client (system-state-endpoint client network (name action))))
+  (rest-post client (system-state-endpoint client network (name action))))
 
 (defn system-arm
   "Shortcut for `(set-system-state client network :arm)`."
@@ -245,7 +252,7 @@
 (defn get-command-status
   "Return the status of command."
   [^BlinkClient client network command-id]
-  (http-get client (command-status-endpoint client network command-id)))
+  (rest-get client (command-status-endpoint client network command-id)))
 
 (defn- home-screen-endpoint [client]
   (str (blink-url (:tier client)) "/api/v3/accounts/"
@@ -255,7 +262,7 @@
   "Return the home screen.  The home screen being a summary of info
   regarding a system and its devices."
   [^BlinkClient client]
-  (http-get client (home-screen-endpoint client)))
+  (rest-get client (home-screen-endpoint client)))
 
 (defn- thumbnail-endpoint [client network camera]
   (str (blink-url (:tier client)) "/network/" network "/camera/" camera "/thumbnail"))
@@ -265,7 +272,7 @@
   network. The new thumbnail will replace the current one on the
   mobile app."
   [^BlinkClient client network camera]
-  (http-post client (thumbnail-endpoint client network camera)))
+  (rest-post client (thumbnail-endpoint client network camera)))
 
 (defn- video-clip-endpoint [client network camera]
   (str (blink-url (:tier client)) "/network/" network "/camera/" camera "/clip"))
@@ -273,9 +280,9 @@
 (defn new-video-clip
   "Take a new video with the sepcific camera on the specific network."
   [^BlinkClient client network camera]
-  (http-post client (video-clip-endpoint client network camera)))
+  (rest-post client (video-clip-endpoint client network camera)))
 
-(defn- media-endpoint [client]
+(defn- select-media-endpoint [client]
   (str (blink-url (:tier client)) "/api/v1/accounts/" (:account-id client) "/media/changed"))
 
 (defn- time-string [time]
@@ -287,7 +294,7 @@
   pages. A starting epoch can be specified with the `:since` keyword
   argument."
   [^BlinkClient client & {:keys [since page]}]
-  (http-get client (media-endpoint client)
+  (rest-get client (select-media-endpoint client)
             {:query-params {:page (or page 0)
                             :since (time-string (or since
                                                     (jt/local-date-time 1970 1 1 0)))}}))
@@ -299,7 +306,7 @@
   "Get configuration and status of a specific camera.  Return a map of
   all the data about the camera."
   [^BlinkClient client network camera]
-  (http-get client (camera-info-endpoint client network camera)))
+  (rest-get client (camera-info-endpoint client network camera)))
 
 (defn- camera-usage-endpoint [client]
   (str (blink-url (:tier client)) "/api/v1/camera/usage"))
@@ -307,7 +314,7 @@
 (defn get-camera-usage
   "Get the usage info of all cameras.  Return a map."
   [^BlinkClient client]
-  (http-get client (camera-usage-endpoint client)))
+  (rest-get client (camera-usage-endpoint client)))
 
 (defn- camera-live-view-endpoint [client network camera]
   (str (blink-url (:tier client)) "/api/v5/accounts/" (:account-id client)
@@ -316,7 +323,7 @@
 (defn get-camera-live-view
   "Return a link to the camera live feed."
   [^BlinkClient client network camera]
-  (http-post client (camera-live-view-endpoint client network camera)))
+  (rest-post client (camera-live-view-endpoint client network camera)))
 
 (defn- camera-sensors-endpoint [client network camera]
   (str (blink-url (:tier client)) "/network/" network
@@ -325,7 +332,7 @@
 (defn get-camera-sensors
   "Return the status of a camera's sensors."
   [^BlinkClient client network camera]
-  (http-get client (camera-sensors-endpoint client network camera)))
+  (rest-get client (camera-sensors-endpoint client network camera)))
 
 (defn- motion-detection-endpoint [client network camera action]
   (str (blink-url (:tier client)) "/network/" network
@@ -336,7 +343,7 @@
   parameter `action` should be either `:eable` or `:disable`"
   [^BlinkClient client network camera action]
   {:pre [(#{:enable :disable} action)]}
-  (http-post client (motion-detection-endpoint client network camera action)))
+  (rest-post client (motion-detection-endpoint client network camera action)))
 
 (defn motion-detection-enable
   "Short for `(set-motion-detection client network camera :enable)`"
