@@ -13,17 +13,26 @@
 (defonce ^:private default-cookie-jar (make-cookie-store))
 
 (defn- keywordify-map [m]
-  (->> (map (juxt (comp keyword s/lower-case key) val) m)
+  (->> (map (juxt (comp keyword s/lower-case name key) val) m)
        (into {})))
 
 (defn- get-header [response header]
   (get (keywordify-map (:headers response)) header))
 
 (defn- get-content-type [response]
-  (s/split (get-header response :content-type) #";"))
+  (let [ct (get-header response :content-type)]
+    (when ct
+      (or (s/split ct #";")))))
+
+(get-content-type {:headers {:content-type "json"}})
+(get-header {:headers {:content-type "json"}} :content-type)
+(s/split "json" #";")
 
 (defn- json-content? [response]
-  (boolean (re-find #"json" (first (get-content-type response)))))
+  (let [ct (first (get-content-type response))]
+    (if ct
+      (boolean (re-find #"json" ct))
+      false)))
 
 (defn- ->json-string [thing]
   (if (map? thing)
