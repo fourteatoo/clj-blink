@@ -71,9 +71,9 @@
           add-url
           decode-json-reply))))
 
-(def http-get (restify http/get))
-(def http-post (restify http/post))
-(def http-put (restify http/put))
+(def http-get (restify #'http/get))
+(def http-post (restify #'http/post))
+(def http-put (restify #'http/put))
 
 (defn merge-http-opts [opts1 opts2]
   (merge-with (fn [o1 o2]
