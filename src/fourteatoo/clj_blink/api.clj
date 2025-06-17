@@ -272,7 +272,7 @@
 (defn new-video-clip
   "Take a new video with the sepcific camera on the specific network."
   [^BlinkClient client network camera]
-  (http-post client (thumbnail-endpoint client network camera)))
+  (http-post client (video-clip-endpoint client network camera)))
 
 (defn- media-endpoint [client]
   (str (blink-url (:tier client)) "/api/v1/accounts/" (:account-id client) "/media/changed"))
