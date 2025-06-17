@@ -221,22 +221,22 @@
   (str (blink-url (:tier client)) "/api/v1/accounts/" (:account-id client) "/networks/" network
        "/state/" action))
 
-(defn system-change-state
+(defn set-system-state
   "Change the state of the system.  `action` being either `:arm` or
   `:disarm`.  Return a map with the actions performed on the network."
   [^BlinkClient client network action]
-  {:pre (#{:arm :disarm} action)}
+  {:pre [(#{:arm :disarm} action)]}
   (http-post client (system-state-endpoint client network (name action))))
 
 (defn system-arm
-  "Shortcut for `(system-change-state client network :arm)`."
+  "Shortcut for `(set-system-state client network :arm)`."
   [^BlinkClient client network]
-  (system-change-state client network :arm))
+  (set-system-state client network :arm))
 
 (defn system-disarm
-  "Shortcut for `(system-change-state client network :disarm)`."
+  "Shortcut for `(set-system-state client network :disarm)`."
   [^BlinkClient client network]
-  (system-change-state client network :disarm))
+  (set-system-state client network :disarm))
 
 (defn- command-status-endpoint [client network command-id]
   (str (blink-url (:tier client)) "/network/" network "/command/" command-id))
@@ -246,15 +246,15 @@
   [^BlinkClient client network command-id]
   (http-get client (command-status-endpoint client network command-id)))
 
-(defn- home-screen-endpoint [client network]
+(defn- home-screen-endpoint [client]
   (str (blink-url (:tier client)) "/api/v3/accounts/"
        (:account-id client) "/homescreen"))
 
 (defn get-home-screen
-  "Return the home screen for the specific network.  The home screen
-  being a summary of info regarding a network and its devices."
-  [^BlinkClient client network]
-  (http-get client (home-screen-endpoint client network)))
+  "Return the home screen.  The home screen being a summary of info
+  regarding a system and its devices."
+  [^BlinkClient client]
+  (http-get client (home-screen-endpoint client)))
 
 (defn- thumbnail-endpoint [client network camera]
   (str (blink-url (:tier client)) "/network/" network "/camera/" camera "/thumbnail"))
@@ -330,19 +330,19 @@
   (str (blink-url (:tier client)) "/network/" network
        "/camera/" camera "/" (name action)))
 
-(defn change-motion-detection
+(defn set-motion-detection
   "Enable or disable the motion detection of a specific camera. The
   parameter `action` should be either `:eable` or `:disable`"
   [^BlinkClient client network camera action]
-  {:pre (#{:enable :disable} action)}
+  {:pre [(#{:enable :disable} action)]}
   (http-post client (motion-detection-endpoint client network camera action)))
 
 (defn motion-detection-enable
-  "Short for `(change-motion-detection client network camera :enable)`"
+  "Short for `(set-motion-detection client network camera :enable)`"
   [^BlinkClient client network camera]
-  (change-motion-detection client network camera :enable))
+  (set-motion-detection client network camera :enable))
 
 (defn motion-detection-disable
-  "Short for `(change-motion-detection client network camera :disable)`"
+  "Short for `(set-motion-detection client network camera :disable)`"
   [^BlinkClient client network camera]
-  (change-motion-detection client network camera :disable))
+  (set-motion-detection client network camera :disable))
