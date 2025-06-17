@@ -49,10 +49,12 @@
 
 (defn- decode-json-reply [response]
   (if (json-content? response)
-    (assoc response :json
-           (-> response
-               :body
-               (json/parse-string kebab-keys)))
+    (if (string? (:body response))
+      (assoc response :json
+             (-> response
+                 :body
+                 (json/parse-string kebab-keys)))
+      (assoc response :json (:body response)))
     response))
 
 (defn- restify [action]
