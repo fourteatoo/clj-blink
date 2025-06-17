@@ -14,11 +14,12 @@
 (defn- make-uuid []
   (java.util.UUID/randomUUID))
 
-(def ^:dynamic *device-id* "clj-blink")
+(def ^:dynamic *device-id* "Clojure")
+(def ^:dynamic *client-name* "clj-blink")
 
 (defn- default-login-data []
   {:device-identifier *device-id*
-   :client-name *device-id*})
+   :client-name *client-name*})
 
 (defrecord BlinkClient [email password unique-id
                         account-id client-id auth-token tier])
