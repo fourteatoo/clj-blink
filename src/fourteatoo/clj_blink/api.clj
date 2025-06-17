@@ -354,3 +354,11 @@
   "Short for `(set-motion-detection client network camera :disable)`"
   [^BlinkClient client network camera]
   (set-motion-detection client network camera :disable))
+
+(defn- media-endpoint [client path]
+  (str (blink-url (:tier client)) path))
+
+(defn fetch-media [client path]
+  (-> (http-get client (media-endpoint client path))
+      :body
+      #_(.getBytes)))
