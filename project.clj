@@ -11,4 +11,5 @@
   :profiles {:dev {:plugins [[lein-codox "0.10.8"]]
                    :dependencies [[org.clojure/tools.trace "0.8.0"]]}
              :test {:dependencies [[org.clojure/tools.trace "0.8.0"]]}}
-  :repl-options {:init-ns fourteatoo.clj-blink.api})
+  :repl-options {:init-ns fourteatoo.clj-blink.api}
+  :lein-release {:deploy-via :clojars})
