@@ -24,10 +24,6 @@
     (when ct
       (or (s/split ct #";")))))
 
-(get-content-type {:headers {:content-type "json"}})
-(get-header {:headers {:content-type "json"}} :content-type)
-(s/split "json" #";")
-
 (defn- json-content? [response]
   (let [ct (first (get-content-type response))]
     (if ct
