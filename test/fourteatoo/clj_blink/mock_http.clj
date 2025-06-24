@@ -2,8 +2,7 @@
   (:require [fourteatoo.clj-blink.http :as http]
             [clojure.tools.trace :as trace]
             [clojure.test :as t]
-            [cheshire.core :as json]
-            [fourteatoo.clj-blink.api :as api]))
+            [cheshire.core :as json]))
 
 (defn toggle-trace []
   (trace/trace-vars clj-http.client/get
