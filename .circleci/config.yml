@@ -14,7 +14,7 @@ jobs:
     docker:
       # Specify the version you desire here
       # See: https://circleci.com/developer/images/image/cimg/clojure
-      - image: cimg/clojure:1.12.0
+      - image: cimg/clojure:1.12.0-openjdk-21.0
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
