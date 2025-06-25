@@ -52,7 +52,7 @@ jobs:
       - run: lein cloverage
 
       - store_test_results:
-          path: target/cloverage
+          path: target/coverage
 
 
 
