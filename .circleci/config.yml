@@ -49,7 +49,7 @@ jobs:
       # run tests!
       - run: lein test
 
-      - run: lein cloverage
+      - run: lein cloverage --junit --codecov
 
       - store_test_results:
           path: target/coverage
