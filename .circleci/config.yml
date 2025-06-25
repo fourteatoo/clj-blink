@@ -49,6 +49,13 @@ jobs:
       # run tests!
       - run: lein test
 
+      - run: lein cloverage
+
+      - store_test_results:
+          path: target/cloverage
+
+
+
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
 workflows:
