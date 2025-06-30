@@ -54,7 +54,7 @@ jobs:
 
       - run: lein cloverage --junit --codecov --coveralls
 
-      - coveralls/upload
+      - coveralls/upload:
           coverage_file: target/coverage/coveralls.json
 
       - store_test_results:
@@ -67,5 +67,5 @@ jobs:
 workflows:
   standard:
     jobs:
-      - build
+      - build:
           context: default
