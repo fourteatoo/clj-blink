@@ -55,6 +55,7 @@ jobs:
       - run: lein cloverage --junit --codecov --coveralls
 
       - coveralls/upload
+          coverage_file: target/coverage/coveralls.json
 
       - store_test_results:
           path: target/coverage
