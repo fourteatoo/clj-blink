@@ -1,7 +1,7 @@
 [![Clojars Project](https://img.shields.io/clojars/v/io.github.fourteatoo/clj-blink.svg?include_prereleases)](https://clojars.org/io.github.fourteatoo/clj-blink)
 [![cljdoc badge](https://cljdoc.org/badge/io.github.fourteatoo/clj-blink)](https://cljdoc.org/d/io.github.fourteatoo/clj-blink)
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/fourteatoo/clj-blink/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/fourteatoo/clj-blink/tree/main)
-
+[![Coverage Status](https://coveralls.io/repos/github/fourteatoo/clj-blink/badge.svg)](https://coveralls.io/github/fourteatoo/clj-blink)
 
 # clj-blink
 
