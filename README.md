@@ -110,9 +110,9 @@ then you can, for instance, arm all your systems (assuming you have
 more than one):
 
 ```clojure
-(->> (get-networks client)
+(->> (blink/get-networks client)
      :networks
-     (run! #(system-arm client (:id %))))
+     (run! #(blink/system-arm client (:id %))))
 ```
 
 or disarm them, substituting `system-arm` for `system-disarm`.
