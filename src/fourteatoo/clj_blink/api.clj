@@ -71,10 +71,13 @@
   ((apply comp (conj (vec wrappers) with-original-http-op))
    op))
 
-(def ^:private rest-get (wrap-http-op http/http-get just-the-json with-headers with-auto-reauth))
-(def ^:private http-get (wrap-http-op http/http-get with-headers with-auto-reauth))
-(def ^:private rest-put (wrap-http-op http/http-put just-the-json with-headers with-auto-reauth))
-(def ^:private rest-post (wrap-http-op http/http-post just-the-json with-headers with-auto-reauth))
+;;
+;; NOTE: with-headers needs to be last or the reauth mechanism breaks
+;;
+(def ^:private rest-get (wrap-http-op http/http-get just-the-json with-auto-reauth with-headers))
+(def ^:private http-get (wrap-http-op http/http-get with-auto-reauth with-headers))
+(def ^:private rest-put (wrap-http-op http/http-put just-the-json with-auto-reauth with-headers))
+(def ^:private rest-post (wrap-http-op http/http-post just-the-json with-auto-reauth with-headers))
 (def ^:private rest-post1
   "Same as `rest-post` but do not retry on authentication errors."
   (wrap-http-op http/http-post just-the-json with-headers))
