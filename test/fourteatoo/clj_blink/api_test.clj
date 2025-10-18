@@ -6,10 +6,8 @@
 
 (def dummy-client
   (api/->BlinkClient "john@smith.address" "password"
-                     "00000000-0000-0000-0000-000000000000"
-                     12345 67890
-                     (atom "somesessiontoken")
-                     "super"))
+                     (atom {:access-token "foo" :refresh-token "bar" :token-type "Buster"})
+                     "super" 12345 67890))
 
 (comment
   (mock/call-with-mocks (fn []
@@ -18,8 +16,9 @@
 (use-fixtures :once mock/call-with-mocks)
 
 (defn check-auth-token [response]
-  (is (= @(:auth-token dummy-client)
-         (get-in response [:opts :headers :token-auth]))))
+  (is (= (str (:token-type @(:auth-tokens dummy-client)) " "
+              (:access-token @(:auth-tokens dummy-client)))
+         (get-in response [:opts :headers :authorization]))))
 
 (defn assert-empty-body [response]
   (is (nil? (get-in response [:opts :body]))))
