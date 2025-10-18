@@ -198,6 +198,19 @@
   [^BlinkClient client network]
   (set-system-state client network :disarm))
 
+(defn- notifications-configuration-endpoint [client]
+  (str (blink-url (:tier client)) "/api/v1/accounts/" (:account-id client)
+       "/notifications/configuration"))
+
+(defn get-notifications-configuration
+  [^BlinkClient client]
+  (rest-get client (notifications-configuration-endpoint client)))
+
+;; NOTE: this triggers an internal server error (500)
+(defn ^:deprecated set-notifications-configuration [client configuration]
+  (rest-post client (notifications-configuration-endpoint client)
+             {:notifications configuration}))
+
 (defn- command-status-endpoint [client network command-id]
   (str (blink-url (:tier client)) "/network/" network "/command/" command-id))
 
