@@ -12,7 +12,7 @@
 (defn- blink-url [& [tier]]
   (str "https://rest-" (or tier "prod") "." api-domain))
 
-(defrecord BlinkClient [email password auth-tokens tier account-id tulsa-id])
+(defrecord BlinkClient [username password auth-tokens tier account-id tulsa-id])
 
 (defn- add-authorization-header [headers type token]
   (assoc headers :authorization (str type " " token)))
