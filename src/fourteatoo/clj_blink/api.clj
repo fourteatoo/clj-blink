@@ -338,6 +338,24 @@
   [^BlinkClient client network camera]
   (set-motion-detection client network camera :disable))
 
+(defn- local-storage-endpoint [client network module]
+  (str (blink-url (:tier client)) "/api/v1/accounts/" (:account-id client)
+       "/networks/" network "/sync_modules/" module "/local_storage/manifest/request"))
+
+(defn get-local-storage-manifest [^BlinkClient client network module]
+  (rest-post client (local-storage-endpoint client network module)))
+
+(defn- local-storage-clip-endpoint [client network module manifest clip]
+  (str (blink-url (:tier client))
+       "/api/v1/accounts/" (:account-id client)
+       "/networks/" network
+       "/sync_modules/" module
+       "/local_storage/manifest/" manifest
+       "/clip/request/" clip))
+
+(defn get-local-storage-clip [^BlinkClient client network module manifest clip]
+  (rest-post client (local-storage-clip-endpoint client network module manifest clip)))
+
 (defn- media-endpoint [client path]
   (str (blink-url (:tier client)) path))
 
