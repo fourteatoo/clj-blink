@@ -229,6 +229,14 @@
   [^BlinkClient client]
   (rest-get client (home-screen-endpoint client)))
 
+;; This enpoint has been discontinued (error 426)
+(comment
+  (defn- sync-events-endpoint [client network]
+    (str (blink-url (:tier client)) "/events/network/" network))
+
+  (defn get-sync-events [^BlinkClient client network]
+    (rest-get client (sync-events-endpoint client network))))
+
 (defn- thumbnail-endpoint [client network camera]
   (str (blink-url (:tier client)) "/network/" network "/camera/" camera "/thumbnail"))
 
@@ -263,6 +271,16 @@
             {:query-params {:page (or page 0)
                             :since (time-string (or since
                                                     (jt/local-date-time 1970 1 1 0)))}}))
+
+;; This enpoint has been discontinued (error 426)
+(comment
+  (defn- cameras-endpoint [client network]
+    (str (blink-url (:tier client)) "/network/" network "/cameras"))
+
+  (defn get-cameras
+    "Get all info about all cameras on the `network`"
+    [^BlinkClient client network]
+    (rest-get client (cameras-endpoint client network))))
 
 (defn- camera-info-endpoint [client network camera]
   (str (blink-url (:tier client)) "/network/" network "/camera/" camera "/config"))
