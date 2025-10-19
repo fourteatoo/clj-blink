@@ -17,6 +17,9 @@
 (defn- add-authorization-header [headers type token]
   (assoc headers :authorization (str type " " token)))
 
+(defn refresh-token [client]
+  (:refresh-token @(:auth-tokens client)))
+
 (defn- make-headers [client]
   (cond-> (auth/default-headers)
     (:auth-tokens client)
@@ -77,7 +80,7 @@
 ;; Authentication
 
 (defn- refresh-client-token [client]
-  (auth/refresh-token (:username client) (:refresh-token @(:auth-tokens client))))
+  (auth/refresh-token (:username client) (refresh-token client)))
 
 (defn- get-tier-info [client]
   (rest-get client (str (blink-url) "/api/v1/users/tier_info")))
