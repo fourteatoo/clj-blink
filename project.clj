@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.12.1"]
                  [clojure.java-time "1.4.3"]
                  [clj-http "3.13.0"]
+                 [ring/ring-codec "1.3.0"]
                  [cheshire "6.0.0"]
                  [camel-snake-kebab "0.4.3"]]
   :profiles {:dev {:plugins [[lein-codox "0.10.8"]

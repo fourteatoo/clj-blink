@@ -4,6 +4,7 @@
   the other primitives."
   (:require
    [fourteatoo.clj-blink.http :as http]
+   [fourteatoo.clj-blink.oauth :as auth]
    [java-time :as jt]))
 
 (def ^:private api-domain "immedia-semi.com")
@@ -11,40 +12,36 @@
 (defn- blink-url [& [tier]]
   (str "https://rest-" (or tier "prod") "." api-domain))
 
-(defn- make-uuid []
-  (java.util.UUID/randomUUID))
+(defrecord BlinkClient [username password auth-tokens tier account-id tulsa-id])
 
-(def ^:dynamic *device-id* "Clojure")
-(def ^:dynamic *client-name* "clj-blink")
+(defn- add-authorization-header [headers type token]
+  (assoc headers :authorization (str type " " token)))
 
-(defn- default-login-data []
-  {:device-identifier *device-id*
-   :client-name *client-name*})
-
-(defrecord BlinkClient [email password unique-id
-                        account-id client-id auth-token tier])
+(defn refresh-token [client]
+  (:refresh-token @(:auth-tokens client)))
 
 (defn- make-headers [client]
-  (cond-> {:content-type "application/json"
-           :user-agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:138.0) Gecko/20100101 Firefox/138.0"}
-    (:auth-token client) (assoc "TOKEN_AUTH" @(:auth-token client))))
+  (cond-> (auth/default-headers)
+    (:auth-tokens client)
+    (add-authorization-header (:token-type @(:auth-tokens client))
+                              (:access-token @(:auth-tokens client)))))
 
 (defn- add-headers [client opts]
-  (update opts :headers merge (make-headers client)))
+  (update opts :headers #(merge (make-headers client) %)))
 
 (defn- unauthenticated-exception? [e]
   (= 401 (:http-status (ex-data e))))
 
-(def refresh-client-registration)
+(def refresh-client-token)
 
-(defn- update-auth-token! [client]
-  (let [reply (refresh-client-registration client)]
-    (reset! (:auth-token client) (get-in reply [:auth :token])))
+(defn- update-auth-tokens! [client]
+  (let [reply (refresh-client-token client)]
+    (reset! (:auth-tokens client) reply))
   client)
 
 (defn- with-headers [op]
   (fn [client url & [opts & rest]]
-    (apply op client url (cons (add-headers client opts) rest))))
+    (apply op client url (add-headers client opts) rest)))
 
 (defn- with-auto-reauth [op]
   (fn [client url & rest]
@@ -54,7 +51,7 @@
         (catch Exception e
           (if (unauthenticated-exception? e)
             (do
-              (update-auth-token! client)
+              (update-auth-tokens! client)
               (exec))
             (throw e)))))))
 
@@ -72,99 +69,54 @@
    op))
 
 ;;
-;; NOTE: with-headers needs to be last or the reauth mechanism breaks
+;; NOTE: with-headers needs to be last
 ;;
 (def ^:private rest-get (wrap-http-op http/http-get just-the-json with-auto-reauth with-headers))
 (def ^:private http-get (wrap-http-op http/http-get with-auto-reauth with-headers))
 (def ^:private rest-put (wrap-http-op http/http-put just-the-json with-auto-reauth with-headers))
 (def ^:private rest-post (wrap-http-op http/http-post just-the-json with-auto-reauth with-headers))
-(def ^:private rest-post1
-  "Same as `rest-post` but do not retry on authentication errors."
-  (wrap-http-op http/http-post just-the-json with-headers))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Authentication
 
-(defn- login-endpoint []
-  (str (blink-url) "/api/v5/account/login"))
+(defn- refresh-client-token [client]
+  (auth/refresh-token (:username client) (refresh-token client)))
 
-(defn- start-client-registration
-  "Login with a new client. This step should be done only once.
-  The server may try to verify the login with 2FA. The response
-  contains information for the user as to where from he should expect
-  the 2FA (phone SMS, email, etc).  The registration is not complete
-  until confirmed.  See `verify-pin`."
-  [email password unique-id reauth]
-  (let [data (merge (default-login-data)
-                    {:email email
-                     :password password
-                     :unique-id unique-id
-                     :reauth reauth})]
-    (rest-post1 nil
-                (login-endpoint)
-                {:body data})))
-
-(defn- refresh-client-registration [client]
-  (start-client-registration (:email client) (:password client) (:unique-id client) true))
+(defn- get-tier-info [client]
+  (rest-get client (str (blink-url) "/api/v1/users/tier_info")))
 
 (defn- verification-endpoint [client]
   (str (blink-url (:tier client)) "/api/v4/account/" (:account-id client)
        "/client/" (:client-id client) "/pin/verify"))
 
-(defn- verify-pin
-  "Send back the 2FA PIN.  This is the second phase of the registration.
-  See `start-client-registration`."
-  [client pin]
-  (rest-post1 client
-              (verification-endpoint client)
-              {:body {:pin pin}}))
-
-(defn- register-reply->client [reply email password unique-id]
-  (->BlinkClient email password unique-id 
-                 (get-in reply [:account :account-id])
-                 (get-in reply [:account :client-id])
-                 (atom (get-in reply [:auth :token]))
-                 (get-in reply [:account :tier])))
+(defn- make-client [email password tokens & [tier account-id tulsa-id]]
+  (->BlinkClient email password (atom tokens) tier account-id tulsa-id))
 
 (defn register-client
   "Register a new client with the server.  You need to call this
-  function only once and save its output.  This function will trigger
+  function only once and save its output.  This function may trigger
   the 2FA from Blink.  You will be asked to enter a PIN that is
   delivered to you via email or SMS. Return a map that identifies the
   client in the successive API calls. An unique id is generated for
   you, but it can also be passed as keyword argument, if
   necessary. See `authenticate-client`."
-  [email password & {:keys [unique-id]}]
-  (let [unique-id (or unique-id (make-uuid))
-        reply (start-client-registration email password unique-id false)]
-    (when (get-in reply [:account :client-verification-required])
-      (println "Client verification required")
-      (doseq [[k v] (:verification reply)]
-        (when (:required v)
-          (when (= :phone k)
-            (println "Phone number" (get-in reply [:phone :number])))
-          (println k (dissoc v :required))))
-      (println "Type here the PIN you have received:")
-      (let [pin (read-line)
-            client (register-reply->client reply email password unique-id)
-            verification (verify-pin client pin)]
-        (when-not (:valid verification)
-          (throw (ex-info "failed PIN verification"
-                          {:client client :pin pin :reply verification})))
-        (println "Write down the following information:")
-        (prn (select-keys client [:email :password :unique-id]))
-        client))))
+  [username password]
+  (->> (auth/register-client username password)
+       (make-client username password)))
 
 (defn authenticate-client
   "Authenticate client.  Call this function to authenticate your client.
-  The `unique-id` comes from a previous `register-client`. It is an
-  error to call this function with an `unique-id` that is invalid or
-  unknown to the server.  Return a map that identifies the client and
-  can be passed to all the other API functions."
-  [email password unique-id]
-  (-> (start-client-registration email password unique-id true)
-      (register-reply->client email password unique-id)))
+  The `tokens` comes from a previous `register-client`. Return a
+  BlinkClient that identifies the client and can be passed to all the
+  other API functions."
+  [username password refresh-token]
+  (let [tokens (auth/refresh-token username refresh-token)
+        client (make-client username password tokens)
+        {:keys [tier account-id tulsa-id]} (get-tier-info client)]
+    (assoc client
+           :tier tier
+           :account-id account-id
+           :tulsa-id tulsa-id)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -249,6 +201,19 @@
   [^BlinkClient client network]
   (set-system-state client network :disarm))
 
+(defn- notifications-configuration-endpoint [client]
+  (str (blink-url (:tier client)) "/api/v1/accounts/" (:account-id client)
+       "/notifications/configuration"))
+
+(defn get-notifications-configuration
+  [^BlinkClient client]
+  (rest-get client (notifications-configuration-endpoint client)))
+
+;; NOTE: this triggers an internal server error (500)
+(defn ^:deprecated set-notifications-configuration [client configuration]
+  (rest-post client (notifications-configuration-endpoint client)
+             {:notifications configuration}))
+
 (defn- command-status-endpoint [client network command-id]
   (str (blink-url (:tier client)) "/network/" network "/command/" command-id))
 
@@ -266,6 +231,14 @@
   regarding a system and its devices."
   [^BlinkClient client]
   (rest-get client (home-screen-endpoint client)))
+
+;; This enpoint has been discontinued (error 426)
+(comment
+  (defn- sync-events-endpoint [client network]
+    (str (blink-url (:tier client)) "/events/network/" network))
+
+  (defn get-sync-events [^BlinkClient client network]
+    (rest-get client (sync-events-endpoint client network))))
 
 (defn- thumbnail-endpoint [client network camera]
   (str (blink-url (:tier client)) "/network/" network "/camera/" camera "/thumbnail"))
@@ -301,6 +274,16 @@
             {:query-params {:page (or page 0)
                             :since (time-string (or since
                                                     (jt/local-date-time 1970 1 1 0)))}}))
+
+;; This enpoint has been discontinued (error 426)
+(comment
+  (defn- cameras-endpoint [client network]
+    (str (blink-url (:tier client)) "/network/" network "/cameras"))
+
+  (defn get-cameras
+    "Get all info about all cameras on the `network`"
+    [^BlinkClient client network]
+    (rest-get client (cameras-endpoint client network))))
 
 (defn- camera-info-endpoint [client network camera]
   (str (blink-url (:tier client)) "/network/" network "/camera/" camera "/config"))
@@ -357,6 +340,24 @@
   "Short for `(set-motion-detection client network camera :disable)`"
   [^BlinkClient client network camera]
   (set-motion-detection client network camera :disable))
+
+(defn- local-storage-endpoint [client network module]
+  (str (blink-url (:tier client)) "/api/v1/accounts/" (:account-id client)
+       "/networks/" network "/sync_modules/" module "/local_storage/manifest/request"))
+
+(defn get-local-storage-manifest [^BlinkClient client network module]
+  (rest-post client (local-storage-endpoint client network module)))
+
+(defn- local-storage-clip-endpoint [client network module manifest clip]
+  (str (blink-url (:tier client))
+       "/api/v1/accounts/" (:account-id client)
+       "/networks/" network
+       "/sync_modules/" module
+       "/local_storage/manifest/" manifest
+       "/clip/request/" clip))
+
+(defn get-local-storage-clip [^BlinkClient client network module manifest clip]
+  (rest-post client (local-storage-clip-endpoint client network module manifest clip)))
 
 (defn- media-endpoint [client path]
   (str (blink-url (:tier client)) path))

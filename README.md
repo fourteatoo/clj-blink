@@ -39,29 +39,31 @@ SMS, whatever.  Type it in.
 `register-client` returns a `BlinkClient` object like the following:
 
 ```clojure
-{:email "your@email.address",
+{:user "your@email.address",
  :password "yourpassword",
- :unique-id "some-pseudo-random-hexadecimal-string",
+ :auth-tokens #<Atom@73fdfb7f: "....">,
+ :tier "yourregion,
  :account-id 42,
- :client-id 1337,
- :auth-token #<Atom@73fdfb7f: "anauthenticationtoken">,
- :tier "yourregion"}
+ :tulsa-id 1337}
 ```
 
 Any subsequent authentications (next time your app restarts) should
 instead do:
 
 ```clojure
-(def client (blink/authenticate-client "your@mail.address" "yourpassword" "unique-id"))
+(def client (blink/authenticate-client "your@mail.address" "yourpassword" "refresh-token"))
 ```
 
 The `username` and `password` are the same as those used for the
-`register-client`.  The `unique-id` is the same one returned (and
-displayed) by `register-client`
-("some-pseudo-random-hexadecimal-string" in the example above).
+`register-client`.  The refresh-token is within the client
+object returned by `register-client` (see above).
 
-The authentication (the `auth-token`) is valid for 24 hours and is
-automatically renewed by this libary.
+```clojure
+(blink/refresh-token client)
+```
+
+The authentication expires after a while but it is automatically
+renewed by this libary.
 
 You can use your client parameters like this:
 
