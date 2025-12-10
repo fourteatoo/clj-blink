@@ -137,6 +137,13 @@ $ firefox target/doc/index.html
 ```
 
 
+## Bugs
+
+Around November 2025 Blink has changed the authentication flow.  The
+one implemented by this library doesn't work any longer.  As of today
+there is no fix.
+
+
 ## License
 
 Copyright © 2025 Walter C. Pelissero
